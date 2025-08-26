@@ -1,0 +1,38 @@
+load "msh3"
+
+// Parameters
+int t1 = 0;
+int t2 = 1;
+int np = 20;
+real R = 0.25;
+real x1 = 0.5;
+real x2 = 0.5 ;
+
+// Définir un carré avec des côtés paramétrés
+border B1(t=t1, t2) {x = t; y = 0; label = 1;} 
+border B2(t=t1, t2) {x = 1; y = t; label = 2;} 
+border B3(t=t1, t2) {x = 1 - t; y = 1; label = 3;} 
+border B4(t=t1, t2) {x = 0; y = 1 - t; label = 4;} 
+mesh Th = buildmesh(B1(np) + B2(np) + B3(np) + B4(np));
+
+// Définir la bordure d'un cercle
+border C(t=t1, 2*pi) {x = x1 + R*cos(t); y = x2 + R*sin(t); label = 5;}
+mesh Ch = buildmesh(C(np));
+
+// Définir un maillage sur le carré
+mesh CCh = buildmesh(B1(np) + B2(np) + B3(np) + B4(np) + C(-np*2*pi*R)); // on se fixe une longueur par unité
+
+// Afficher le maillage
+plot(CCh, wait=1);
+
+fespace V0(CCh, P0);
+fespace V1(CCh, P1);
+
+V1 u,v;
+V0 f = 1;
+
+problem Poisson(u,v)=int2d(CCh)(dx(u)*dx(v)+ dy(u)*dy(v)) - int2d(CCh)(f*v)+on(1, 2, 3, 4, 5, u=0);
+
+Poisson;
+
+plot(u, wait=1, fill=1, value=1, dim=3);

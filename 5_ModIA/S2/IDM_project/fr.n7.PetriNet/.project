@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+	<name>fr.n7.PetriNet</name>
+	<comment></comment>
+	<projects>
+	</projects>
+	<buildSpec>
+		<buildCommand>
+			<name>org.eclipse.jdt.core.javabuilder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
+		<buildCommand>
+			<name>org.eclipse.pde.ManifestBuilder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
+		<buildCommand>
+			<name>org.eclipse.pde.SchemaBuilder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
+	</buildSpec>
+	<natures>
+		<nature>org.eclipse.sirius.nature.modelingproject</nature>
+		<nature>org.eclipse.jdt.core.javanature</nature>
+		<nature>org.eclipse.pde.PluginNature</nature>
+	</natures>
+	<linkedResources>
+		<link>
+			<name>src-gen/fr/n7/PetriNet/validation/PetriNetValidator.java</name>
+			<type>1</type>
+			<location>/home/besbesines/Téléchargements/source_validateur/simplepdl/validation/SimplePDLValidator.java</location>
+		</link>
+		<link>
+			<name>src-gen/fr/n7/PetriNet/validation/ValidatePetriNet.java</name>
+			<type>1</type>
+			<location>/home/besbesines/Téléchargements/source_validateur/simplepdl/validation/ValidateSimplepdl.java</location>
+		</link>
+	</linkedResources>
+</projectDescription>

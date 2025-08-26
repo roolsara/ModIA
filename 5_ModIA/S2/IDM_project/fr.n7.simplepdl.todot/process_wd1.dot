@@ -1,0 +1,13 @@
+digraph process_wd1 {
+
+  // WorkDefinitions
+    WD1 [shape=diamond style=filled fillcolor=gray];
+
+  // WorkSequences
+
+  // Ressources
+
+  // UseRessources
+
+  // Guidances
+}

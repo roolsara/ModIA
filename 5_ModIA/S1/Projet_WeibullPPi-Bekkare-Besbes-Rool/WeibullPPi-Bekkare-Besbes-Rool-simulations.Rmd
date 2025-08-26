@@ -1,0 +1,614 @@
+---
+title: "Projet_Poisson"
+output: html_document
+date: "2024-11-28"
+---
+Hanna Bekkare, Ines Besbes, Sara Rool. 5ModIA
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ggplot2)
+```
+
+# Implementation of Weibull intensity
+```{r}
+fct_wei_intensity <- function(x,a,b){return((b/a)*(x/a)**(b-1))}
+fct_wei_cumu <- function(x,a,b){return((x/a)**(b))}
+```
+
+# The impact of $\alpha$ and $\beta$ on the intensity
+We implemented a dynamic graph to visualize the impact of $\alpha$ and $\beta$ on the intensity.
+```{r}
+#library(shiny)
+
+#ui <- fluidPage(
+#  titlePanel("Interactive curve of Weibull intensity"),
+#  sidebarLayout(
+#    sidebarPanel(
+#      sliderInput("a", "Parameter alpha:", min = 1, max = 2000, value = 50),
+#      sliderInput("b", "Parameter beta:", min = 0.1, max = 3, value = 0.9, step = 0.01)
+#    ),
+#    mainPanel(
+#      plotOutput("plot")
+#    )
+#  )
+#)
+
+#server <- function(input, output) {
+#  output$plot <- renderPlot({
+#    curve(fct_wei_intensity(x,input$a, input$b), from = 0, to = 10, col = "blue",
+#          xlab = "Time", ylab = "Intensity")
+#  })
+#}
+
+#shinyApp(ui = ui, server = server)
+```
+
+## Impact of $\alpha$
+```{r}
+library(ggplot2)
+
+alpha_values <- c(1,10,50)
+beta <- 1.5
+t <- seq(0.01, 10, length.out = 100)
+
+data <- do.call(rbind, lapply(alpha_values, function(alpha) {
+  data.frame(
+    t = t,
+    alpha = alpha,
+    h_t = fct_wei_intensity(t, alpha, beta)
+  )
+}))
+
+
+plot <- ggplot(data, aes(x = t, y = h_t, color = as.factor(alpha))) +
+  geom_line(linewidth = 1) +
+  labs(title = "Weibull intensity for differents α",
+       x = "Time",
+       y = "Intensity",
+       color = "α") +
+  theme_minimal() +
+  facet_wrap(~ alpha, scales = "free_y")
+
+print(plot)
+
+```
+\
+
+## Impact of $\beta$
+
+```{r}
+library(ggplot2)
+
+alpha <- 50
+beta_values <- c(0.8,1, 1.5, 2, 3)
+t <- seq(0.01, 10, length.out = 100)
+
+data <- do.call(rbind, lapply(beta_values, function(beta) {
+  data.frame(
+    t = t,
+    beta = beta,
+    h_t = fct_wei_intensity(t, alpha, beta)
+  )
+}))
+
+
+plot <- ggplot(data, aes(x = t, y = h_t, color = as.factor(beta))) +
+  geom_line(linewidth = 1) +
+  labs(title = "Weibull intensity for differents β",
+       x = "Time",
+       y = "Intensity",
+       color = "β") +
+  theme_minimal() +
+  facet_wrap(~ beta, scales = "free_y")
+
+print(plot)
+
+```
+
+
+# Simulation of a Weibull process
+Simulating a Weibull process is equivalent to simulating a non-homogeneous Poisson process with a specific intensity function.
+
+## Simulation of a homogeneous Poisson process
+Simulation of a homogeneous Poisson process with intensity `lambda` on the window [0,`Tmax`].
+
+```{r}
+simulPPh <- function(lambda,Tmax)
+{
+  N_tmax = rpois(1, lambda*Tmax)
+  unif = sort(runif(N_tmax, 0, Tmax))
+  return(unif)
+}
+```
+
+Let us define a plot function for a counting process `PP`. 
+```{r}
+plot.PP <- function(PP) {
+  df <- data.frame(
+    time = c(0, PP),
+    count = 0:length(PP)
+  )
+  
+  points_df <- data.frame(
+    time = PP,
+    count = rep(0, length(PP))
+  )
+  
+  ggplot(df, aes(x = time, y = count)) +
+    geom_step(direction = "hv", color = "blue", size = 1) +
+    geom_point(data = points_df, aes(x = time, y = count), shape = 16, color = "red", size = 3) +
+    geom_segment(data = points_df, aes(x = time, xend = time, y = count, yend = match(time, PP) - 1),
+                 linetype = "dashed", color = "black") +
+    labs(x = "Time t", y = "Number of events by time t") +
+    theme_minimal()
+}
+```
+
+```{r}
+PPh = simulPPh(2,100)
+plot.PP(PPh)
+```
+
+## Simulation of an inhomogeneous Poisson process
+Simulation of an inhomogeneous Poisson processes with Weibull intensity function on a fixed window [0,`Tmax`]. 
+```{r}
+simulPPi <- function(Tmax, M, a, b) {
+  hpp = simulPPh(M, Tmax)
+  
+  unif = runif(length(hpp), 0, M)
+  
+  selected = (unif <= fct_wei_intensity(hpp, a, b))
+  
+  return(sort(hpp[selected]))
+}
+```
+\
+
+### Case where β > 1
+```{r}
+Tmax=10
+b=2.5
+a=1
+M = (b/a)*(Tmax/a)**(b-1) 
+PPi = simulPPi(Tmax,M,a,b)
+par(mfrow=c(1,2))
+curve(fct_wei_intensity(x,a,b),from=0,to=Tmax,n=1000)
+plot.PP(PPi)
+```
+\
+
+### Case where β < 1
+```{r}
+Tmax=1000
+b=0.5
+a=1
+M = 10000
+PPi2= simulPPi(Tmax,M,a ,b)
+
+par(mfrow=c(1,2))
+curve(fct_wei_intensity(x,a,b),from=0,to=Tmax,n=1000)
+plot.PP(PPi2)
+```
+
+
+# Parameters estimation
+We simulate four Weibull processes.
+```{r}
+Tmax=1000
+b=2.5
+a=1
+M = (b/a)*(Tmax/a)**(b-1)
+PPi1 = simulPPi(Tmax, M, a, b) 
+```
+
+```{r}
+Tmax=1000
+b=2.5
+a=30
+M = (b/a)*(Tmax/a)**(b-1)
+PPi3 = simulPPi(Tmax, M, a, b) 
+```
+
+```{r}
+Tmax=1000
+b=0.8
+a=1
+M = 10000
+PPi2= simulPPi(Tmax, M, a, b)
+```
+
+```{r}
+Tmax=1000
+b=0.8
+a=30
+M = 10000
+PPi4= simulPPi(Tmax, M, a, b)
+```
+
+We implement a function to compute our estimators.
+```{r}
+MLE <- function(PPi,Tmax)
+{
+  Nt = length(PPi)
+  mle_beta = 1/(log(Tmax) - (1/Nt)*sum(log(PPi)))
+  mle_alpha = Tmax*Nt**(-1/mle_beta)
+  return(c(mle_alpha,mle_beta))
+}
+```
+
+```{r, echo=FALSE}
+cat(sprintf("True values : (1, 2.5), estimated values : (%.5f, %.5f)\n", MLE(PPi1, Tmax)[1], MLE(PPi1, Tmax)[2]))
+cat(sprintf("True values : (1, 0.8), estimated values : (%.5f, %.5f)\n", MLE(PPi2, Tmax)[1], MLE(PPi2, Tmax)[2]))
+cat(sprintf("True values : (30, 2.5), estimated values : (%.5f, %.5f)\n", MLE(PPi3, Tmax)[1], MLE(PPi3, Tmax)[2]))
+cat(sprintf("True values : (30, 0.8), estimated values : (%.5f, %.5f)\n", MLE(PPi4, Tmax)[1], MLE(PPi4, Tmax)[2]))
+```
+
+
+# Convergence of the estimators
+This next section is commented as the code execution is very time-consuming. The results of the execution are available to see in the report.
+\
+
+We aim to study the convergence of the two Maximum Likelihood Estimators of $\alpha$ and $\beta$. We simulate data for different values of $T_{max}$, the maximum observation time, and analyze how the MLEs stabilize around the true parameter values.
+
+## Convergence of $\beta$
+The first plot shows the evolution of $\hat{\beta}$ as a function of $T_{max}$. The horizontal dashed line represents the true value of $\beta = 0.5$.
+This visualization helps assess that $\hat{\beta}$ stabilizes near the true value as $T_{max}$ increases. The estimator of $\beta$ is consistent, this result confirms it is the right estimator.
+
+```{r}
+# Parameters
+# b <- 0.5
+# a <- 10
+# Tillustr <- 1:10000
+# 
+# # Simulation of the MLEs
+# MLE1 <- numeric(length(Tillustr))
+# MLE2 <- numeric(length(Tillustr))
+# 
+# for (i in seq_along(Tillustr)) {
+#   Tvar <- Tillustr[i]
+#   ppi <- simulPPi(Tvar,10000, a, b)  # Function simulPPi
+#   MLE_values <- MLE(ppi, Tvar)  # Function MLE
+#   MLE1[i] <- MLE_values[1]
+#   MLE2[i] <- MLE_values[2]
+# }
+# 
+# # Create dataframe with the data
+# data <- data.frame(
+#   Tmax = Tillustr,
+#   MLE1 = MLE1
+# )
+# 
+# data <- na.omit(data)  # Delete line that contain NA
+# 
+# # Verify the extrema values
+# max_Tmax <- max(data$Tmax, na.rm = TRUE)
+# max_MLE1 <- max(data$MLE1, na.rm = TRUE)
+# 
+# # Trace the graph
+# ggplot(data, aes(x = Tmax, y = MLE1)) +
+#   geom_line(color = "blue", linewidth = 1) +
+#   geom_hline(yintercept = b, color = "red", linetype = "dashed", linewidth = 1.2) +  # Horizontal line for b
+#   labs(
+#     x = "Tmax",
+#     y = expression(beta),
+#     title = "Convergence of Beta as a function of Tmax"
+#   ) +
+#   scale_x_continuous(limits = c(0, max_Tmax)) +  # Ajusts limits of the X axis
+#   scale_y_continuous(limits = c(0, max_MLE1)) +  # Ajusts limits of the Y axis
+#   theme_minimal()
+```
+
+## Convergence of $\alpha$
+We study the convergence of the estimator of $\alpha$, $\hat{\alpha}$, the same ways as $\hat{\beta}$. However, we do not observe the same results: $\hat{\alpha}$ does not converge towards $\alpha$ over time. This means that the estimator we computed is not consistent. We will study later on in this notebook the influence of $\alpha$ on the model and try to explain this result.
+```{r}
+# # Create dataframe with the data
+# data <- data.frame(
+#   Tmax = Tillustr,
+#   MLE2 = MLE2
+# )
+# 
+
+# data <- na.omit(data)  # Delete rows with NA value
+# 
+# # Verify the extrema
+# max_Tmax <- max(data$Tmax, na.rm = TRUE)
+# max_MLE2 <- max(data$MLE2, na.rm = TRUE)
+# 
+# # Trace the graph
+# ggplot(data, aes(x = Tmax, y = MLE2)) +
+#   geom_line(color = "blue", linewidth = 1) + 
+#   geom_hline(yintercept = a, color = "red", linetype = "dashed", linewidth = 1.2) +  # Horizontal line for b
+#   labs(
+#     x = "Tmax",
+#     y = expression(alpha),
+#     title = "Convergence of Alpha as a function of Tmax"
+#   ) +
+#   scale_x_continuous(limits = c(0, max_Tmax)) +  # Ajusts limits of the X axis
+#   scale_y_continuous(limits = c(0, max_MLE2)) +  # Ajusts limits of the Y axis
+#   theme_minimal()
+
+```
+
+# Confidence intervals
+## Confidence interval for $\beta$
+We implement a function to compute the confidence interval for $\beta$.
+
+```{r}
+IC_beta <- function(PPi,Tmax,epsilon)
+  {
+  Nt=length(PPi)
+  chi2_lower <- qchisq(epsilon / 2, df = 2 * Nt)
+  chi2_upper <- qchisq(1 - epsilon / 2, df = 2 * Nt)
+  
+  lower_bound <- (MLE(PPi,Tmax)[2]* chi2_lower) / (2 * Nt)
+  upper_bound <- (MLE(PPi,Tmax)[2] * chi2_upper) / (2 * Nt)
+  
+  return(c(lower_bound, upper_bound))
+
+}
+```
+
+## Asymptotic confidence interval for $\beta$
+We implement a function to compute the asymptotic interval for $\beta$.
+
+```{r}
+IC_beta_asymp<- function(PPi,Tmax,epsilon)
+{
+  Nt=length(PPi)
+  z <- qnorm(1 - epsilon / 2)
+  
+  lower_bound <- MLE(PPi,Tmax)[2] * (1 - z / sqrt(Nt))
+  upper_bound <- MLE(PPi,Tmax)[2] * (1 + z / sqrt(Nt))
+  
+  return(c(lower = lower_bound, upper = upper_bound))
+}
+
+```
+
+## Asymptotic confidence interval for $\alpha$
+
+We implement a function to compute the asymptotic interval for $\alpha$.
+```{r}
+IC_alpha_asymptotic <- function(PPi,Tmax,epsilon)
+{
+  Nt=length(PPi)
+  z <- qnorm(1 - epsilon/2)
+  lower_bound <- (MLE(PPi,Tmax)[1])*exp(-(log(Tmax)/sqrt(Nt)) * z)
+  upper_bound <- (MLE(PPi,Tmax)[1])*exp(+(log(Tmax)/sqrt(Nt)) * z)
+  return(c(lower_bound,upper_bound))
+}
+```
+
+## Results
+
+```{r, echo=FALSE}
+cat(sprintf("Asymptotic interval for alpha = 1 with beta = 2.5 : [%.5f, %.5f]\n", IC_alpha_asymptotic(PPi1,Tmax,0.05)[1], IC_alpha_asymptotic(PPi1,Tmax,0.05)[2]))
+cat(sprintf("Asymptotic interval for alpha = 1 with beta = 0.8 : [%.5f, %.5f]\n", IC_alpha_asymptotic(PPi2,Tmax,0.05)[1], IC_alpha_asymptotic(PPi2,Tmax,0.05)[2]))
+cat(sprintf("Asymptotic interval for alpha = 30 with beta = 2.5  : [%.5f, %.5f]\n", IC_alpha_asymptotic(PPi3,Tmax,0.05)[1], IC_alpha_asymptotic(PPi3,Tmax,0.05)[2]))
+cat(sprintf("Asymptotic interval for alpha = 30 with beta = 0.8 : [%.5f, %.5f]\n", IC_alpha_asymptotic(PPi4,Tmax,0.05)[1], IC_alpha_asymptotic(PPi4,Tmax,0.05)[2]))
+```
+
+```{r, echo=FALSE}
+cat(sprintf("Asymptotic interval for beta = 2.5 with alpha=1: [%.5f, %.5f]\n", IC_beta_asymp(PPi1,Tmax,0.05)[1], IC_beta_asymp(PPi1,Tmax,0.05)[2]))
+cat(sprintf("Asymptotic interval for beta = 0.8 with alpha=1: [%.5f, %.5f]\n", IC_beta_asymp(PPi2,Tmax,0.05)[1], IC_beta_asymp(PPi2,Tmax,0.05)[2]))
+cat(sprintf("Asymptotic interval for beta = 2.5 with alpha=30: [%.5f, %.5f]\n", IC_beta_asymp(PPi3,Tmax,0.05)[1], IC_beta_asymp(PPi3,Tmax,0.05)[2]))
+cat(sprintf("Asymptotic interval for beta = 0.8 with alpha=30: [%.5f, %.5f]\n", IC_beta_asymp(PPi4,Tmax,0.05)[1], IC_beta_asymp(PPi4,Tmax,0.05)[2]))
+```
+
+```{r, echo=FALSE}
+cat(sprintf("Confidence interval for beta = 2.5 with alpha=1: [%.5f, %.5f]\n", IC_beta(PPi1,Tmax,0.05)[1], IC_beta_asymp(PPi1,Tmax,0.05)[2]))
+cat(sprintf("Confidence interval for beta = 0.8 with alpha=1: [%.5f, %.5f]\n", IC_beta(PPi2,Tmax,0.05)[1], IC_beta_asymp(PPi2,Tmax,0.05)[2]))
+cat(sprintf("Confidence interval for beta = 2.5 with alpha=30: [%.5f, %.5f]\n", IC_beta(PPi3,Tmax,0.05)[1], IC_beta_asymp(PPi3,Tmax,0.05)[2]))
+cat(sprintf("Confidence interval for beta = 0.8 with alpha=30: [%.5f, %.5f]\n", IC_beta(PPi4,Tmax,0.05)[1], IC_beta_asymp(PPi4,Tmax,0.05)[2]))
+```
+
+
+# Boeing
+## General analysis
+```{r}
+data <- read.csv("time_failure_boeing.csv", header = TRUE)
+```
+
+```{r}
+data_reduced = data[, c("B09", "B12", "B13")]
+data_reduced$B09_T <- cumsum(data_reduced$B09)
+data_reduced$B12_T <- cumsum(data_reduced$B12)
+data_reduced$B13_T <- cumsum(data_reduced$B13)
+```
+
+```{r}
+library(ggplot2)
+data_long <- data.frame(
+  Time = c(data_reduced$B09_T, data_reduced$B12_T, data_reduced$B13_T),
+  Count = rep(1:nrow(data_reduced), times = 3),
+  Plane = rep(c("B09", "B12", "B13"), each = nrow(data_reduced))
+)
+```
+
+```{r}
+par(mfrow = c(3, 1))
+
+for (plane in unique(data_long$Plane)) {
+  plane_data <- data_long[data_long$Plane == plane, ]
+  plot(plane_data$Time, plane_data$Count, type = "s", lwd = 1, col = "black",
+       xlab = "Time", ylab = "Number of failures", 
+       main = paste("Plane:", plane), xaxs = "i", yaxs = "i")
+  
+  for (i in seq_along(plane_data$Time)) {
+    lines(c(plane_data$Time[i], plane_data$Time[i]), 
+          c(0, plane_data$Count[i]), 
+          lty = 2, col = "gray")
+  }
+}
+```
+
+```{r}
+data_reduced_cleaned <- lapply(data_reduced[c("B09_T", "B12_T", "B13_T")], function(col) {
+  na.omit(col)
+})
+mle_results <- lapply(data_reduced_cleaned, function(col) {
+  Tmax <- max(na.omit(col))
+  MLE(col, Tmax) 
+})
+mle_results
+```
+
+```{r}
+par(mfrow = c(3, 1))
+colname <- c("B09", "B12", "B13")
+for (i in 1:length(mle_results)) {
+  a <- mle_results[[i]][1]
+  b <- mle_results[[i]][2]
+  
+  Tmax <- max(data_reduced_cleaned[[i]])
+  curve(fct_wei_intensity(x, a, b), from = 0, to = Tmax, n = 1000, 
+        xlab = "Time", ylab = "Intensity", main =paste(colname[i], ", alpha :", round(a, 2), ", beta :", round(b, 2)), 
+        col = "blue", lwd = 2)
+  
+}
+
+par(mfrow = c(1, 1))
+```
+
+```{r}
+IC_alpha_results <- lapply(data_reduced_cleaned, function(col) {
+  Tmax <- max(na.omit(col))
+  IC_alpha_asymptotic(col, Tmax, 0.05) 
+})
+IC_alpha_results
+```
+
+```{r}
+IC_beta_results <- lapply(data_reduced_cleaned, function(col) {
+  Tmax <- max(na.omit(col))
+  IC_beta(col, Tmax, 0.05) 
+})
+IC_beta_results
+```
+
+```{r}
+NB_failure_results <- lapply(data_reduced_cleaned, function(col) {
+  Tmax <- max(na.omit(col))
+  fct_wei_cumu(Tmax,  MLE(col, Tmax)[1], MLE(col, Tmax)[2]) 
+})
+NB_failure_results
+```
+
+## Analysis before and after repair
+```{r}
+data_maintenance <- read.csv("time_faillure_with_reparation_boeing.csv", header = TRUE)
+data_maintenance$B08_before_T <- cumsum(data_maintenance$B08_before)
+data_maintenance$B08_after_T <- cumsum(data_maintenance$B08_after)
+data_maintenance$B09_before_T <- cumsum(data_maintenance$B09_before)
+data_maintenance$B09_after_T <- cumsum(data_maintenance$B09_after)
+```
+
+```{r}
+library(tidyr)
+data_long <-na.omit(pivot_longer(
+  data_maintenance, 
+  cols = starts_with("B"),
+  names_to = c("Plane", "State"),
+  names_pattern = "(B\\d+)_(before|after)_T", 
+  values_to = "Value"
+))
+```
+
+```{r}
+par(mfrow = c(2, 2))
+
+planes <- unique(data_long$Plane)
+states <- unique(data_long$State)
+
+for (plane in planes) {
+  for (state in states) {
+    plane_data <- data_long[data_long$Plane == plane & data_long$State == state, ]
+    
+    plot(plane_data$Value, seq_along(plane_data$Value), type = "s", lwd = 1, 
+         col = ifelse(state == "before", "blue", "green"),
+         xlab = "time", ylab = "Number of failures",
+         main = paste("Plane:", plane, "-", state), xaxs = "i", yaxs = "i")
+    
+    for (i in seq_along(plane_data$Value)) {
+      lines(c(plane_data$Value[i], plane_data$Value[i]), 
+            c(0, i), 
+            lty = 2, col = "gray")
+    }
+  }
+}
+
+```
+
+```{r}
+mle_reparation_results <- lapply(data_maintenance[c("B08_before_T", "B08_after_T", "B09_before_T", "B09_after_T")], function(col) {
+  Tmax <- max(na.omit(col))
+  MLE(na.omit(col), Tmax) 
+})
+mle_reparation_results
+```
+
+```{r}
+mle_results <- list(
+  B08 = list(before = mle_reparation_results$B08_before_T, 
+             after = mle_reparation_results$B08_after_T),
+  B09 = list(before = mle_reparation_results$B09_before_T, 
+             after = mle_reparation_results$B09_after_T)
+)
+
+```
+
+```{r}
+par(mfrow = c(2, 2))
+
+planes <- names(mle_results)
+states <- c("before", "after")
+i = 1
+for (plane in planes) {
+  for (state in states) {
+    params <- mle_results[[plane]][[state]]
+    a <- params[1]
+    b <- params[2]
+    
+    Tmax <- max(na.omit(data_maintenance[c("B08_before_T", "B08_after_T", "B09_before_T", "B09_after_T")][i]))
+    i <- i+1
+
+    curve(fct_wei_intensity(x, a, b), from = 0, to = Tmax, n = 1000,
+          xlab = "Time", ylab = "Intensity", 
+          main = paste(plane, state, ", alpha:", round(a, 2), ", beta:", round(b, 2)),
+          col = ifelse(state == "before", "blue", "green"), lwd = 2)
+  }
+}
+
+par(mfrow = c(1, 1))
+
+```
+
+```{r}
+IC_alpha_results_reparation <- lapply(data_maintenance[c("B08_before_T", "B08_after_T", "B09_before_T", "B09_after_T")], function(col) {
+  Tmax <- max(na.omit(col))
+  IC_alpha_asymptotic(na.omit(col), Tmax, 0.05) 
+})
+IC_alpha_results_reparation
+```
+```{r}
+IC_beta_results_reparation <- lapply(data_maintenance[c("B08_before_T", "B08_after_T", "B09_before_T", "B09_after_T")], function(col) {
+  Tmax <- max(na.omit(col))
+  IC_beta(na.omit(col), Tmax, 0.05) 
+})
+IC_beta_results_reparation
+```
+
+```{r}
+NB_failure_results_reparation <- lapply(data_maintenance[c("B08_before_T", "B08_after_T", "B09_before_T", "B09_after_T")], function(col) {
+  Tmax <- max(na.omit(col))
+  fct_wei_cumu(Tmax,  MLE(na.omit(col), Tmax)[1], MLE(na.omit(col), Tmax)[2]) 
+})
+NB_failure_results_reparation
+```
+
+
+
+

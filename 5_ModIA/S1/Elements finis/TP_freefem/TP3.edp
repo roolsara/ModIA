@@ -1,0 +1,65 @@
+load "msh3"
+
+int npref = 1024; 
+
+border B1(t=0, 1) {x = t; y = 0; label = 1;} 
+border B2(t=0, 1) {x = 1; y = t; label = 1;} 
+border B3(t=0, 0.5) {x = 1-t; y = 1; label = 1;}  
+border B4(t=0, 0.5) {x = 0.5; y = 1-t; label = 1;} 
+border B5(t=0, 0.5) {x = 0.5-t; y = 0.5; label = 1;} 
+border B6(t=0, 0.5) {x = 0; y = 0.5-t; label = 1;} 
+
+mesh C = buildmesh(B1(npref) + B2(npref) + B3(npref/2) + B4(npref/2) + B5(npref/2) + B6(npref/2));
+//plot(C, wait=1);
+
+fespace V0ref(C, P0);
+fespace V1ref(C, P1);
+V1ref uref,vref;
+V0ref fref = 1;
+problem Poissonref(uref,vref)=int2d(C)(dx(uref)*dx(vref)+ dy(uref)*dy(vref)) - int2d(C)(fref*vref)+on(1, uref=0);
+Poissonref;
+//plot(uref, wait=1, fill=1, value=1, dim=3);
+
+int[int] np = [pow(2,5), pow(2,6), pow(2,7), pow(2,8)];
+real[int] listerrorL2(np.n);
+real[int] listerrorH1(np.n);
+
+for (int i = 0; i < np.n; ++i) {
+     mesh Th = buildmesh(B1(np[i]) + B2(np[i]) + B3(np[i]/2) + B4(np[i]/2) + B5(np[i]/2) + B6(np[i]/2));
+     fespace V0(Th, P0);
+     fespace V1(Th, P1);
+     V1 u,v;
+     V0 f = 1;
+     problem Poisson(u,v)=int2d(Th)(dx(u)*dx(v)+ dy(u)*dy(v)) - int2d(Th)(f*v)+on(1, u=0);
+     Poisson;
+
+     V1ref uproj = u;
+     V1ref error = uref - uproj;
+     V1ref diskFunc = sqrt((x - 0.5)^2 + (y - 0.5)^2) < 0.1 ? 0 : 1 ;
+     listerrorL2[i] = sqrt(int2d(C)(diskFunc*(error)^2));
+     listerrorH1[i] = sqrt(int2d(C)(diskFunc*(error)^2) + int2d(C)(diskFunc*dx(error)^2) + int2d(C)(diskFunc*dy(error)^2));
+
+};
+
+{
+     ofstream file("Value_tp4.txt");
+     file << "listnp" << "" << np <<endl;
+     file << "listerrorL2" << "" << listerrorL2 <<endl;
+     file << "listerrorH1" << "" << listerrorH1 <<endl;
+
+ };
+
+
+// second membre dans V0, f dans L2, on connait pas sa dérivée (on sait pas si ya une dérivée)
+// si on se met dans V1, on est plus précis que ce qu'on a besoin mais bon ça n'a aucun interet, l'erreur sera pas plus petite
+
+// calcul de l'erreur (sur un maillage différent)
+// attention on fait la différence entre u et son interpolé donc il faut des maillages différents
+
+
+// prendre un maillage très fin
+// solution "exacte sur un maillage fin " quand on projete sur un maillage fin on prends l'interpolé l'errreur quand on projete c'est du meme ordre que si on resout la solution sur le maillage fin
+
+// il faut exclure un voisinage autour de l'angle qui fait chier
+// l'erreur se concentre autour de la "discontinuité"
+// il faudrait faire un maillage plus fin autour du coin rentrant

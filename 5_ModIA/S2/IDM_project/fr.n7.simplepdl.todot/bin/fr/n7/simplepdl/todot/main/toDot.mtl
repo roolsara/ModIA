@@ -1,0 +1,66 @@
+[comment encoding = UTF-8 /]
+[module toDot('http://simplepdl')]
+
+[template public processToDot(aProcess : Process)]
+[comment @main/]
+[file (aProcess.name.concat('.dot'), false, 'UTF-8')]
+digraph [aProcess.name/] {
+
+  // WorkDefinitions
+  [for (wd : WorkDefinition | aProcess.processElements->select(e | e.oclIsTypeOf(WorkDefinition)).oclAsType(WorkDefinition))]
+    [wd.name/] [ '[' /]shape=diamond style=filled fillcolor=gray[ ']' /];
+  [/for]
+
+  // WorkSequences
+  [for (ws : WorkSequence | aProcess.processElements->select(e | e.oclIsTypeOf(WorkSequence)).oclAsType(WorkSequence))]
+    [ws.predecessor.name/] -> [ws.successor.name/] [ '[' /]label="[toLabel(ws.linkType)/]" arrowhead=vee [getColor(ws.linkType)/][ ']' /];
+  [/for]
+
+  // Ressources
+  [for (res : Ressource | aProcess.processElements->select(e | e.oclIsTypeOf(Ressource)).oclAsType(Ressource))]
+    "res_[res.name/]" [ '[' /]label="[res.name/]" shape=ellipse style=filled fillcolor=lightblue[ ']' /];
+  [/for]
+
+  // UseRessources
+  [for (wd : WorkDefinition | aProcess.processElements->select(e | e.oclIsTypeOf(WorkDefinition)).oclAsType(WorkDefinition))]
+    [for (ur : UseRessource | wd.useressource)]
+      [wd.name/] -> "res_[ur.ressource.name/]" [ '[' /]label="use [ur.quantity/]" style=dotted color=blue[ ']' /];
+    [/for]
+  [/for]
+
+  // Guidances
+  [for (g : Guidance | aProcess.processElements->select(e | e.oclIsTypeOf(Guidance)).oclAsType(Guidance))]
+    "guide_[g.text.replaceAll('[^a-zA-Z0-9_]', '_')/]" [ '[' /]label="[g.text/]" shape=note style=filled fillcolor=yellow[ ']' /];
+    [for (e : ProcessElement | g.elements)]
+      [if e.oclIsTypeOf(WorkDefinition) or e.oclIsTypeOf(Ressource)]
+        "guide_[g.text.replaceAll('[^a-zA-Z0-9_]', '_')/]" -> "[e.oclAsType(WorkDefinition).name/]" [ '[' /]style=dotted color=gray[ ']' /];
+      [/if]
+    [/for]
+  [/for]
+}
+[/file]
+[/template]
+
+[query public toLabel(wst : WorkSequenceType) : String =
+  if wst = WorkSequenceType::startToStart then 'startToStart'
+  else if wst = WorkSequenceType::startToFinish then 'startToFinish'
+  else if wst = WorkSequenceType::finishToStart then 'finishToStart'
+  else if wst = WorkSequenceType::finishToFinish then 'finishToFinish'
+  else 'unknown'
+  endif
+  endif
+  endif
+  endif
+/]
+
+[query public getColor(wst : WorkSequenceType) : String =
+  if wst = WorkSequenceType::startToStart then 'color=red'
+  else if wst = WorkSequenceType::finishToStart then 'color=green'
+  else if wst = WorkSequenceType::finishToFinish then 'color=orange'
+  else if wst = WorkSequenceType::startToFinish then 'color=blue'
+  else 'color=black'
+  endif
+  endif
+  endif
+  endif
+/]

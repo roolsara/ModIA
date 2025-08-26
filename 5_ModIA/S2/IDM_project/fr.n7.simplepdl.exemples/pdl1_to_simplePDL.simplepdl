@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<simplepdl:Process xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:simplepdl="http://simplepdl" name="ex1">
+  <processElements xsi:type="simplepdl:Ressource" nb_ressources="5" name="resA" useressource="//@processElements.2/@useressource.0 //@processElements.3/@useressource.0"/>
+  <processElements xsi:type="simplepdl:Ressource" nb_ressources="3" name="resB" useressource="//@processElements.2/@useressource.1"/>
+  <processElements xsi:type="simplepdl:WorkDefinition" linksToSuccessors="//@processElements.5" name="a">
+    <useressource ressource="//@processElements.0" quantity="2"/>
+    <useressource ressource="//@processElements.1" quantity="1"/>
+  </processElements>
+  <processElements xsi:type="simplepdl:WorkDefinition" linksToPredecessors="//@processElements.5" linksToSuccessors="//@processElements.6" name="b">
+    <useressource ressource="//@processElements.0" quantity="1"/>
+  </processElements>
+  <processElements xsi:type="simplepdl:WorkDefinition" linksToPredecessors="//@processElements.6" name="c"/>
+  <processElements xsi:type="simplepdl:WorkSequence" predecessor="//@processElements.2" successor="//@processElements.3"/>
+  <processElements xsi:type="simplepdl:WorkSequence" linkType="finishToFinish" predecessor="//@processElements.3" successor="//@processElements.4"/>
+  <processElements xsi:type="simplepdl:Guidance" text="Texte pour la guidance"/>
+</simplepdl:Process>

@@ -1,0 +1,14 @@
+t 215.0 125.0 WD1_start 0 w n
+t 100.0 225.0 WD1_finish 0 w n
+p 200.0 50.0 WD1_ready 1 n
+p 155.0 175.0 WD1_running 0 n
+p 290.0 140.0 WD1_started 0 n
+p 55.0 280.0 WD1_finished 0 n
+e WD1_finish WD1_finished 1 n
+e WD1_running WD1_finish 1 n
+e WD1_start WD1_running 1 n
+e WD1_start WD1_started 1 n
+e WD1_ready WD1_start 1 n
+h process_wd1
+
+

@@ -1,0 +1,70 @@
+-- @path SPDL=/fr.n7.simplePDL/SimplePDL.ecore
+-- @path XPDL=/fr.n7.pdl1/model/generated/PDL1.ecore
+
+module pdl1_to_simplePDL;
+
+-- Note : XPDL = méta-modèle issu de Xtext
+-- SPDL = méta-modèle SimplePDL
+create OUT : SPDL from IN : XPDL;
+
+
+-- Ce helper n'a pas de contexte. Il est défini au niveau du module.
+helper def: convertLinkType(x : XPDL!WorkSequenceType) : SPDL!WorkSequenceType =
+if x = #s2s then  #startToStart
+else if x = #s2f then #startToFinish
+else if x = #f2s then  #finishToStart
+else #finishToFinish
+endif endif endif; -- pas de SinonSi en ATL
+
+
+rule XProc2SProc {
+	from xp : XPDL!Process
+	to sp : SPDL!Process(
+		name <- xp.name,
+		-- Ajouter les enfants, sinon les autres éléments créés seront orphelins !
+		processElements <- xp.processElements)
+}
+
+rule XWD2SWD {
+	from xwd : XPDL!WorkDefinition
+	to swd : SPDL!WorkDefinition(name <- xwd.name, useressource <- xwd.useressources)
+}
+
+
+rule XWS2SWS {
+	from xws : XPDL!WorkSequence
+	to sws : SPDL!WorkSequence(
+		linkType <- thisModule.convertLinkType(xws.linkType),
+		predecessor <- xws.predecessor, 
+		successor <- xws.successor
+)
+}
+
+
+-- Guidance
+rule XGuide2SGuide {
+	from xg : XPDL!Guidance
+	to sg : SPDL!Guidance(
+		text <- xg.texte
+	)
+}
+
+-- Ressources (Resource dans SimplePDL)
+rule XRess2SRess {
+	from xr : XPDL!Ressources
+	to sr : SPDL!Ressource(
+		name <- xr.name,
+		nb_ressources <- xr.nb_ressources,
+		useressource <- xr.useressources
+	)
+}
+
+-- UseRessources (UseResource dans SimplePDL)
+rule XUseRes2SUseRes {
+	from xu : XPDL!UseRessources
+	to su : SPDL!UseRessource(
+		quantity <- xu.quantity,
+		ressource <- xu.ressources,
+		workdefinition <- xu.eContainer()
+	)
+}

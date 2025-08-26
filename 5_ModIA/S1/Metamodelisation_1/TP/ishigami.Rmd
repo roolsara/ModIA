@@ -1,0 +1,39 @@
+---
+title: "ishigami"
+output: html_document
+date: "2024-10-01"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+A <- 7
+B <- 0.1
+a <- 1/2
+b <- (pi^4)/5
+
+ishigamifun <- function(x){
+  sin(x[,1]) + 7*sin(x[,2])^2 + 0.1*(x[,3]^4) * sin(x[,1])  
+}
+
+N <- 1000
+xSim <- data.frame(matrix(runif(3*N, -pi, pi), ncol = 3))
+ySim <- ishigamifun(xSim)
+
+f0_hat = mean(ySim)
+
+ySimCentered = ySim - f0_hat
+
+i <- 1
+xi <- xSim[,i]
+plot(xi, ySimCentered, xlim = c(-pi,pi), cex=0.2)
+t <- seq(from = -pi, to = pi, length = 200)
+
+loessModel <- loess(y ~ x, data = data.frame(x = xi, y = ySimCentered))
+mainHat <- predict(loessModel, data.frame(x=t))
+lines(t, mainHat, col = 'blue', lwd = 2)
+lines(t,sin(t)*(1+B*b), col = 'red')
+```

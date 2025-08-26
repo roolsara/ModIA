@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PetriNet:PetrINet
+    xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:PetriNet="http://www.example.org/PetriNet"
+    name="PetriNet">
+  <petrielement
+      xsi:type="PetriNet:Transition"
+      name="T1"
+      outgoing="//@petrielement.2">
+    <intervalle
+        borne_inf="3"
+        borne_sup="2"/>
+  </petrielement>
+  <petrielement
+      xsi:type="PetriNet:Place"
+      name="P1"
+      incoming="//@petrielement.2"
+      jeton="-10"/>
+  <petrielement
+      xsi:type="PetriNet:Arc"
+      poids="-5"
+      source="//@petrielement.0"
+      target="//@petrielement.1"/>
+  <petrielement
+      xsi:type="PetriNet:Transition"
+      name="T2">
+    <intervalle
+        borne_inf="-1"
+        borne_sup="-1"/>
+  </petrielement>
+</PetriNet:PetrINet>

@@ -1,0 +1,17 @@
+
+net process_wd2
+
+pl WD1_ready (1)
+pl WD1_running
+pl WD1_started
+pl WD1_finished
+pl WD2_ready (1)
+pl WD2_running
+pl WD2_started
+pl WD2_finished
+
+tr WD1_start WD1_ready -> WD1_running WD1_started
+tr WD1_finish WD1_running -> WD1_finished
+tr WD2_start WD2_ready WD1_started?1 -> WD2_running WD2_started
+tr WD2_finish WD2_running -> WD2_finished
+

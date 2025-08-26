@@ -1,0 +1,30 @@
+
+net spdl_valid_model
+
+pl Conception_ready (1)
+pl Conception_running
+pl Conception_started
+pl Conception_finished
+pl RedactionDoc_ready (1)
+pl RedactionDoc_running
+pl RedactionDoc_started
+pl RedactionDoc_finished
+pl Programmation_ready (1)
+pl Programmation_running
+pl Programmation_started
+pl Programmation_finished
+pl RedactionTests_ready (1)
+pl RedactionTests_running
+pl RedactionTests_started
+pl RedactionTests_finished
+pl Ordinateurs_resource (10)
+
+tr Conception_start Conception_ready Ordinateurs_resource*3 -> Conception_running Conception_started
+tr Conception_finish Conception_running -> Conception_finished Ordinateurs_resource*3
+tr RedactionDoc_start RedactionDoc_ready Programmation_started?1 Ordinateurs_resource*2 -> RedactionDoc_running RedactionDoc_started
+tr RedactionDoc_finish RedactionDoc_running Programmation_finished?1 -> RedactionDoc_finished Ordinateurs_resource*2
+tr Programmation_start Programmation_ready Conception_finished?1 -> Programmation_running Programmation_started
+tr Programmation_finish Programmation_running -> Programmation_finished
+tr RedactionTests_start RedactionTests_ready Conception_started?1 -> RedactionTests_running RedactionTests_started
+tr RedactionTests_finish RedactionTests_running Programmation_finished?1 -> RedactionTests_finished
+

@@ -1,0 +1,27 @@
+digraph spdl_valid_model {
+
+  // WorkDefinitions
+    Conception [shape=diamond style=filled fillcolor=gray];
+    RedactionDoc [shape=diamond style=filled fillcolor=gray];
+    Programmation [shape=diamond style=filled fillcolor=gray];
+    RedactionTests [shape=diamond style=filled fillcolor=gray];
+
+  // WorkSequences
+    Conception -> RedactionTests [label="startToStart" arrowhead=vee color=red];
+    Conception -> Programmation [label="finishToStart" arrowhead=vee color=green];
+    Programmation -> RedactionDoc [label="finishToFinish" arrowhead=vee color=orange];
+    Programmation -> RedactionTests [label="finishToFinish" arrowhead=vee color=orange];
+    Programmation -> RedactionDoc [label="startToStart" arrowhead=vee color=red];
+
+  // Ressources
+    "res_Ordinateurs" [label="Ordinateurs" shape=ellipse style=filled fillcolor=lightblue];
+
+  // UseRessources
+      Conception -> "res_Ordinateurs" [label="use 3" style=dotted color=blue];
+      RedactionDoc -> "res_Ordinateurs" [label="use 2" style=dotted color=blue];
+
+  // Guidances
+    "guide_Text_for_guidance_" [label="Text for guidance." shape=note style=filled fillcolor=yellow];
+        "guide_Text_for_guidance_" -> "Conception" [style=dotted color=gray];
+        "guide_Text_for_guidance_" -> "RedactionTests" [style=dotted color=gray];
+}

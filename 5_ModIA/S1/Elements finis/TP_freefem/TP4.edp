@@ -1,0 +1,50 @@
+load "msh3"
+
+int a = 1;
+int b = 2;
+int np = 20;
+real R = 0.2;
+real x1 = 0;
+real x2 = 0;
+
+// Définir un carré avec des côtés paramétrés
+// border B1(t=-a, a) {x = t; y = -b; label = 1;} 
+// border B2(t=-b, b) {x = a; y = t; label = 2;} 
+// border B3(t=-a, a) {x = - t; y = b; label = 3;} 
+// border B4(t=-b, b) {x = -a; y = - t; label = 4;} 
+// mesh Th = buildmesh(B1(np) + B2(np) + B3(np) + B4(np));
+//plot(Th, wait=1);
+
+// Définir la bordure d'un cercle
+// border C(t=0, 2*pi) {x = x1 + R*cos(t); y = x2 + R*sin(t); label = 5;}
+// mesh Ch = buildmesh(C(np));
+//plot(Ch, wait=1);
+
+// Définir un maillage sur le carré
+// mesh CCh = buildmesh(B1(np*2*a) + B2(np*2*b) + B3(np*2*a) + B4(np*2*b) + C(-np*2*pi*R)); // on se fixe une longueur par unité
+// // Afficher le maillage
+// plot(CCh, wait=1);
+
+mesh Th = square(np*a,np*b,[-a+2*a*x,-b+2*b*y]);
+plot(Th, wait=1);
+
+fespace V0(Th, P0);
+fespace V1(Th, P1);
+real Tf = 50;
+real e = 1e-6;
+
+V1 Te,v;
+V0 f = Tf;
+real mu = 0.4;
+real r = 0.2;
+
+V0 diskFunc = sqrt((x)^2 + (y)^2) < r ? 1 : 0 ;
+
+problem Chaleur(Te,v)=int2d(Th)(mu*(1-diskFunc)*(dx(Te)*dx(v)+ dy(Te)*dy(v))) + int2d(Th)(diskFunc*Te*v/e) - int2d(Th)(diskFunc*f*v/e) + on(1, Te=0)+ on(2,3,4, Te=25);
+Chaleur;
+
+plot(Te, wait=1, fill=1, value=1, dim=3);
+
+
+
+

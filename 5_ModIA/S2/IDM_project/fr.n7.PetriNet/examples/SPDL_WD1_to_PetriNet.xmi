@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<PetriNet:PetrINet xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:PetriNet="http://www.example.org/PetriNet" name="process_wd1">
+  <petrielement xsi:type="PetriNet:Place" name="WD1_ready" outgoing="//@petrielement.6" jeton="1"/>
+  <petrielement xsi:type="PetriNet:Place" name="WD1_running" outgoing="//@petrielement.9" incoming="//@petrielement.7"/>
+  <petrielement xsi:type="PetriNet:Place" name="WD1_started" incoming="//@petrielement.8"/>
+  <petrielement xsi:type="PetriNet:Place" name="WD1_finished" incoming="//@petrielement.10"/>
+  <petrielement xsi:type="PetriNet:Transition" name="WD1_start" outgoing="//@petrielement.7 //@petrielement.8" incoming="//@petrielement.6"/>
+  <petrielement xsi:type="PetriNet:Transition" name="WD1_finish" outgoing="//@petrielement.10" incoming="//@petrielement.9"/>
+  <petrielement xsi:type="PetriNet:Arc" poids="1" source="//@petrielement.0" target="//@petrielement.4"/>
+  <petrielement xsi:type="PetriNet:Arc" poids="1" source="//@petrielement.4" target="//@petrielement.1"/>
+  <petrielement xsi:type="PetriNet:Arc" poids="1" source="//@petrielement.4" target="//@petrielement.2"/>
+  <petrielement xsi:type="PetriNet:Arc" poids="1" source="//@petrielement.1" target="//@petrielement.5"/>
+  <petrielement xsi:type="PetriNet:Arc" poids="1" source="//@petrielement.5" target="//@petrielement.3"/>
+</PetriNet:PetrINet>

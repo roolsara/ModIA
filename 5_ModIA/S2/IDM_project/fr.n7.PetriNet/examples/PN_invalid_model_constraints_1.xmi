@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PetriNet:PetrINet
+    xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:PetriNet="http://www.example.org/PetriNet"
+    name="DangerousNet">
+  <petrielement
+      xsi:type="PetriNet:Arc"
+      poids="-1"
+      source="//@petrielement.1"
+      target="//@petrielement.2"/>
+  <petrielement
+      xsi:type="PetriNet:Place"
+      name="Noeud"
+      outgoing="//@petrielement.0"
+      jeton="2"/>
+  <petrielement
+      xsi:type="PetriNet:Place"
+      name="Noeud"
+      incoming="//@petrielement.0"/>
+  <petrielement
+      xsi:type="PetriNet:Transition"
+      name="Noeud"/>
+</PetriNet:PetrINet>

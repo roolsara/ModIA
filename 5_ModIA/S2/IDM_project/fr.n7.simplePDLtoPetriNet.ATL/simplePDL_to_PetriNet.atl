@@ -1,0 +1,145 @@
+-- @path SimplePDL=/fr.n7.simplePDL/SimplePDL.ecore
+-- @path PetriNet=/fr.n7.PetriNet/model/PetriNet.ecore
+
+module simplePDL2PetriNet;
+create OUT : PetriNet from IN : SimplePDL;
+
+
+helper context SimplePDL!ProcessElement
+def: getProcess() : SimplePDL!Process =
+	SimplePDL!Process.allInstances()
+		->select(p | p.processElements->includes(self))
+		->asSequence()->first();
+
+rule Process2PetriNet {
+	from p : SimplePDL!Process
+	to pn : PetriNet!PetrINet (
+		name <- p.name
+	)
+}
+
+rule WorkDefinition2PetriNet {
+	from wd : SimplePDL!WorkDefinition
+	to
+		pl_ready : PetriNet!Place(
+			name <- wd.name + '_ready',
+			jeton <- 1,
+			petrinet <- wd.getProcess()
+		),
+		
+		pl_running : PetriNet!Place(
+			name <- wd.name + '_running',
+			jeton <- 0,
+			petrinet <- wd.getProcess()
+		),
+		
+		pl_started : PetriNet!Place(
+			name <- wd.name + '_started',
+			jeton <- 0,
+			petrinet <- wd.getProcess()
+		),
+		
+		pl_finished : PetriNet!Place(
+			name <- wd.name + '_finished',
+			jeton <- 0,
+			petrinet <- wd.getProcess()
+		),
+		
+		tr_start : PetriNet!Transition(
+			name <- wd.name + '_start',
+			petrinet <- wd.getProcess()
+		),
+		
+		tr_finish : PetriNet!Transition(
+			name <- wd.name + '_finish',
+			petrinet <- wd.getProcess()
+		),
+		
+		ar_ready2start : PetriNet!Arc(
+			poids <- 1,       -- correction des noms d’attributs
+			type <- #simple,
+			source <- pl_ready,
+			target <- tr_start,
+			petrinet <- wd.getProcess()
+		),
+		
+		ar_start2running : PetriNet!Arc(
+			poids <- 1,
+			type <- #simple,
+			source <- tr_start,
+			target <- pl_running,
+			petrinet <- wd.getProcess()
+		),
+		
+		ar_start2started : PetriNet!Arc(
+			poids <- 1,
+			type <- #simple,
+			source <- tr_start,
+			target <- pl_started,
+			petrinet <- wd.getProcess()
+		),
+		
+		ar_running2finish : PetriNet!Arc(
+			poids <- 1,
+			type <- #simple,
+			source <- pl_running,
+			target <- tr_finish,
+			petrinet <- wd.getProcess()
+		),
+		
+		ar_finish2finished : PetriNet!Arc(
+			poids <- 1,
+			type <- #simple,
+			source <- tr_finish,
+			target <- pl_finished,
+			petrinet <- wd.getProcess()
+		)
+}
+
+rule WorkSequence2PetriNet {
+	from ws : SimplePDL!WorkSequence
+	to ws_arc : PetriNet!Arc (
+		poids <- 1,
+		type <- #read_arc,
+		source <- thisModule.resolveTemp(
+			ws.predecessor,
+			if (ws.linkType = #startToStart or ws.linkType = #startToFinish) then 'pl_started' else 'pl_finished' endif
+		),
+		target <- thisModule.resolveTemp(
+			ws.successor,
+			if (ws.linkType = #startToStart or ws.linkType = #finishToStart) then 'tr_start' else 'tr_finish' endif
+		),
+		petrinet <- ws.getProcess()
+	)
+}
+
+rule Ressources2PetriNet {
+	from res : SimplePDL!Ressource
+	to pl_resource : PetriNet!Place (
+		name <- res.name + '_resource',
+		jeton <- res.nb_ressources,
+		petrinet <- res.getProcess()
+	)
+}
+
+rule UseRessources2PetriNet {
+	from ur : SimplePDL!UseRessource
+	to 
+		ar_load : PetriNet!Arc (
+			poids <- ur.quantity,
+			type <- #simple,
+			source <- ur.ressource,
+			target <- thisModule.resolveTemp(ur.workdefinition, 'tr_start'),
+			petrinet <- ur.ressource.getProcess()
+		),
+		
+		ar_release : PetriNet!Arc (
+			poids <- ur.quantity,
+			type <- #simple,
+			source <- thisModule.resolveTemp(ur.workdefinition, 'tr_finish'),
+			target <- ur.ressource,
+			petrinet <- ur.ressource.getProcess()
+		)
+}
+
+

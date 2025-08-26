@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PetriNet:PetrINet
+    xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:PetriNet="http://www.example.org/PetriNet"
+    name="petrinet">
+  <petrielement
+      xsi:type="PetriNet:Transition"
+      name="t1"
+      outgoing="//@petrielement.4 //@petrielement.6">
+    <intervalle
+        borne_sup="-1"/>
+  </petrielement>
+  <petrielement
+      xsi:type="PetriNet:Place"
+      name="p1"
+      incoming="//@petrielement.4 //@petrielement.7"
+      jeton="1"/>
+  <petrielement
+      xsi:type="PetriNet:Transition"
+      name="t2"
+      outgoing="//@petrielement.5 //@petrielement.7"/>
+  <petrielement
+      xsi:type="PetriNet:Place"
+      name="p2"
+      incoming="//@petrielement.5 //@petrielement.6"/>
+  <petrielement
+      xsi:type="PetriNet:Arc"
+      poids="1"
+      type="read_arc"
+      source="//@petrielement.0"
+      target="//@petrielement.1"/>
+  <petrielement
+      xsi:type="PetriNet:Arc"
+      poids="1"
+      source="//@petrielement.2"
+      target="//@petrielement.3"/>
+  <petrielement
+      xsi:type="PetriNet:Arc"
+      poids="1"
+      source="//@petrielement.0"
+      target="//@petrielement.3"/>
+  <petrielement
+      xsi:type="PetriNet:Arc"
+      poids="1"
+      source="//@petrielement.2"
+      target="//@petrielement.1"/>
+</PetriNet:PetrINet>

@@ -1,0 +1,61 @@
+load "msh3"
+
+// Parameters
+int nperror = 512; 
+int p = 5;
+int q = 5;
+int[int] np = [pow(2,5), pow(2,6), pow(2,7), pow(2,8)];
+real[int] listerrorL2(np.n);
+real[int] listerrorH1(np.n);
+real[int] listh(np.n);
+
+
+mesh Therror = square(nperror,nperror);
+fespace V1error(Therror, P1);
+V1error utrue = sin(p*pi*x)*sin(q*pi*y);
+
+
+for (int i = 0; i < np.n; ++i) {
+    mesh Th = square(np[i],np[i]);
+    fespace V0(Th, P0);
+    fespace V1(Th, P1);
+    V1 u,v;
+    V0 f = ((p*pi)^2 + (q*pi)^2)*sin(p*pi*x)*sin(q*pi*y);
+    problem Poisson(u,v)=int2d(Th)(dx(u)*dx(v)+ dy(u)*dy(v)) - int2d(Th)(f*v)+on(1, 2, 3, 4, u=0);
+    Poisson;
+    V1error uproj = u;
+    V1error error = utrue - uproj;
+    listerrorL2[i] = sqrt(int2d(Therror)((error)^2));
+    listerrorH1[i] = sqrt(int2d(Therror)((error)^2) + int2d(Therror)(dx(error)^2) + int2d(Therror)(dy(error)^2));
+
+    fespace Ph(Th, P0);
+    Ph h = hTriangle;
+    real hmax = h[].max;
+};
+cout << "La valeur de listerrorL2 est : " << listerrorL2 << endl;
+cout << "La valeur de listerrorH1 est : " << listerrorH1 << endl;
+
+{
+    ofstream file("Value.txt");
+    file << "listnp" << "" << np <<endl;
+    file << "listerrorL2" << "" << listerrorL2 <<endl;
+    file << "listerrorH1" << "" << listerrorH1 <<endl;
+
+};
+
+
+// second membre dans V0, f dans L2, on connait pas sa dérivée (on sait pas si ya une dérivée)
+// si on se met dans V1, on est plus précis que ce qu'on a besoin mais bon ça n'a aucun interet, l'erreur sera pas plus petite
+
+
+
+
+// calcul de l'erreur (sur un maillage différent)
+// attention on fait la différence entre u et son interpolé donc il faut des maillages différents
+
+
+//real error_L2 = sqrt(int2d(Th_error)((error)^2))
+//real error_H1 = sqrt(int2d(Th_error)((error)^2) + int2d(Th_error)(dx(error)^2) + int2d(Th_error)(dy(error)^2))
+
+
+// on calcule les erreurs avec l'interpolé (maillage fin pour pas que l'erreur d'interpolation prenne le dessus sur l'erreur numérique)

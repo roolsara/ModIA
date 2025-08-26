@@ -1,0 +1,19 @@
+process ex1 {
+	
+  resource resA amount 5
+  resource resB amount 3
+
+  wd a
+    use 2 of resA
+    use 1 of resB
+
+  wd b
+    use 1 of resA    
+
+  wd c  
+
+  ws s2s from a to b
+  ws f2f from b to c
+  
+  note "Texte pour la guidance"
+}

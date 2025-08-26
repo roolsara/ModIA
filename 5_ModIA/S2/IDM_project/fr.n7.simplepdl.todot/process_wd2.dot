@@ -1,0 +1,15 @@
+digraph process_wd2 {
+
+  // WorkDefinitions
+    WD1 [shape=diamond style=filled fillcolor=gray];
+    WD2 [shape=diamond style=filled fillcolor=gray];
+
+  // WorkSequences
+    WD1 -> WD2 [label="startToStart" arrowhead=vee color=red];
+
+  // Ressources
+
+  // UseRessources
+
+  // Guidances
+}
