@@ -42,6 +42,10 @@ This project targets recognition of drone voice commands from audio recordings. 
 
 → 5_ModIA/S2/Apprentissage sous contrainte physique/LDA_Fourier/Projet
 
+- **Attribute editing with StyleGAN:** Reimplemented a research paper on StyleGAN, gaining an in-depth understanding of its architecture and functionalities such as latent/embedding spaces, encoder, GAN and transformers.
+
+→ 4_ModIA/Ondelettes/projet_edition_attribut_GAN
+
 - **Overall design of an aircraft:** This project applied surrogate modeling and robust optimization to efficiently design aircraft that minimize maximum takeoff weight under uncertainty while maintaining reliability and performance.
 
 → 5_ModIA/S2/Metamodelisation_2
